@@ -41,8 +41,8 @@ jobs:
           year: ${{ steps.CURRENT_YEAR.outputs.year }}
         with:
           commit-message: "minor: Bump year to ${{ env.year }}"
-          committer: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
-          author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
+          committer: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
+          author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
           branch: bump-year
           delete-branch: true
           body: "minor: Bump year to ${{ env.year }}"
