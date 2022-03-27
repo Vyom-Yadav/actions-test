@@ -34,7 +34,7 @@ if [ ! -z "$LINKED_ISSUES" ]; then
   sed -i "s/^/$CHECKSTYLE_ISSUE_PREFIX/g" $LINKED_ISSUES_FORMATTED
 fi
 
-for line in $MENTIONED_ISSUES; do
+for line in $(cat $MENTIONED_ISSUES); do
   issue=${line#*[0-9]:}
   location=${line%:[0-9]*}
   location=${location:2}
@@ -46,7 +46,7 @@ for line in $MENTIONED_ISSUES; do
   if [ "$STATE" = "closed" ]; then
     echo "$LINK" >> $CLOSED_ISSUES
   elif [ ! -z "$LINKED_ISSUES" ]; then
-    for linked_issue in $LINKED_ISSUES_FORMATTED; do
+    for linked_issue in $(cat $LINKED_ISSUES_FORMATTED); do
       if [ "$linked_issue" = "$GITHUB_HOST/$issue" ]; then
         echo "$LINK" >> $LINKED_ISSUES_MENTIONED
       fi
