@@ -58,7 +58,8 @@ if [ -f "$CLOSED_ISSUES" ]; then
     echo -ne "\nFollowing issues are mentioned in code to do something after they are closed:\n\n"
     cat $CLOSED_ISSUES
     if [ -f "$LINKED_ISSUES_MENTIONED" ]; then
-      echo -ne "\nFollowing issues are linked to the pull request and are also mentioned in the code:\n\n"
+      echo -ne "\nFollowing issues are linked to the pull request and are also"\
+      "mentioned in the code:\n\n"
       cat $LINKED_ISSUES_MENTIONED
     fi
     exit 1
