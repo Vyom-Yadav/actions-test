@@ -18,6 +18,8 @@ if [ ! -z "$PR_HEAD_REPO_NAME" ]; then
   DEFAULT_BRANCH=$GITHUB_HEAD_REF
 fi
 
+cat $LINKED_ISSUES
+
 # collect issues where full link is used
 grep -IPonr "(after|[Tt]il[l]?) $GITHUB_HOST/[\w.-]+/[\w.-]+/issues/\d{1,5}" . \
   | perl -pe 's/:(?!\d).*github.com\//:/' >> $MENTIONED_ISSUES
