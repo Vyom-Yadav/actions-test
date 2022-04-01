@@ -3,7 +3,7 @@
 set -e
 
 # Script requires GITHUB_TOKEN env variable
-MENTIONED_ISSUES=/tmp/mentioned_issues
+MENTIONED_ISSUES_GREP_OUTPUT=/tmp/mentioned_issues_grep_output
 CLOSED_ISSUES=/tmp/failed_issues
 
 # Linked issues that are mentioned in the code
@@ -13,49 +13,58 @@ GITHUB_HOST="https://github.com"
 MAIN_REPO="Vyom-Yadav/actions-test"
 DEFAULT_BRANCH="master"
 
+# These are modified when event is of type pull_request
 if [ ! -z "$PR_HEAD_REPO_NAME" ]; then
   MAIN_REPO=$PR_HEAD_REPO_NAME
   DEFAULT_BRANCH=$GITHUB_HEAD_REF
 fi
 
-ls -al /tmp/ | grep "linked_issues"
-
-cat $LINKED_ISSUES
 # collect issues where full link is used
 grep -IPonr "(after|[Tt]il[l]?) $GITHUB_HOST/[\w.-]+/[\w.-]+/issues/\d{1,5}" . \
-  | perl -pe 's/:(?!\d).*github.com\//:/' >> $MENTIONED_ISSUES
+  | sed -e 's/:[a-zA-Z].*github.com\//:/' >> $MENTIONED_ISSUES_GREP_OUTPUT
 
 # collect checkstyle issues where only hash sign is used
 grep -IPonr "[Tt]il[l]? #\d{1,5}" . \
-  | perl -pe 's/:(?!\d).*#/:Vyom-Yadav\/actions-test\/issues\//' >> $MENTIONED_ISSUES
+  | sed -e 's/:[a-zA-Z].*#/:Vyom-Yadav\/actions-test\/issues\//' >> $MENTIONED_ISSUES_GREP_OUTPUT
 
-for line in $(cat $MENTIONED_ISSUES); do
-  issue=${line#*[0-9]:}
-  location=${line%:[0-9]*}
-  location=${location:2}
-  line_number=${line#*:}
-  line_number=${line_number%:*}
-  LINK="$GITHUB_HOST/$MAIN_REPO/blob/$DEFAULT_BRANCH/$location#L$line_number"
-  STATE=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "$API_GITHUB_PREFIX/$issue" \
+for MENTIONED_ISSUES_GREP_OUTPUT_LINE in $(cat $MENTIONED_ISSUES_GREP_OUTPUT); do
+  ISSUE=${MENTIONED_ISSUES_GREP_OUTPUT_LINE#*[0-9]:}
+
+  FILE_PATH=${MENTIONED_ISSUES_GREP_OUTPUT_LINE%:[0-9]*}
+  FILE_PATH=${FILE_PATH:2}
+
+  LINE_NUMBER=${MENTIONED_ISSUES_GREP_OUTPUT_LINE#*:}
+  LINE_NUMBER=${LINE_NUMBER%:*}
+
+  LINK="$GITHUB_HOST/$MAIN_REPO/blob/$DEFAULT_BRANCH/$FILE_PATH#L$LINE_NUMBER"
+
+  STATE=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "$API_GITHUB_PREFIX/$ISSUE" \
    | jq '.state' | xargs)
   if [ "$STATE" = "closed" ]; then
     echo "$LINK" >> $CLOSED_ISSUES
-  elif [ ! -z "$LINKED_ISSUES" ]; then
-    for linked_issue in $(cat $LINKED_ISSUES); do
-      if [ "$linked_issue" = "$GITHUB_HOST/$issue" ]; then
+  fi
+  if [ ! -z "$LINKED_ISSUES" ]; then
+    for LINKED_ISSUE in $(cat $LINKED_ISSUES); do
+      if [ "$LINKED_ISSUE" = "$GITHUB_HOST/$ISSUE" ]; then
         echo "$LINK" >> $LINKED_ISSUES_MENTIONED
       fi
     done
   fi
 done
 
+EXIT_CODE=0
+
 if [ -f "$CLOSED_ISSUES" ]; then
-    echo -ne "\nFollowing issues are mentioned in code to do something after they are closed:\n\n"
+    echo -ne "\nFollowing lines are referencing closed issues, such lines should be removed:\n\n"
     cat $CLOSED_ISSUES
-    if [ -f "$LINKED_ISSUES_MENTIONED" ]; then
-      echo -ne "\nFollowing issues are linked to the pull request and are also"\
-      " mentioned in the code:\n\n"
-      cat $LINKED_ISSUES_MENTIONED
-    fi
-    exit 1
+    EXIT_CODE=1
 fi
+
+if [ -f "$LINKED_ISSUES_MENTIONED" ]; then
+    echo -ne "\nFollowing lines are referencing to issues linked to this PR, such"\
+    "lines should be removed:\n\n"
+    cat $LINKED_ISSUES_MENTIONED
+    EXIT_CODE=1
+fi
+
+exit $EXIT_CODE
