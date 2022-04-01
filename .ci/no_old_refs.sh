@@ -55,14 +55,18 @@ done
 EXIT_CODE=0
 
 if [ -f "$CLOSED_ISSUES" ]; then
-    echo -ne "\nFollowing lines are referencing closed issues, such lines should be removed:\n\n"
+    echo
+    echo -e "Following lines are referencing closed issues, such lines should be removed:"
+    echo
     cat $CLOSED_ISSUES
     EXIT_CODE=1
 fi
 
 if [ -f "$LINKED_ISSUES_MENTIONED" ]; then
-    echo -ne "\nFollowing lines are referencing to issues linked to this PR, such"\
-    "lines should be removed:\n\n"
+    echo
+    echo -e "Following lines are referencing to issues linked to this PR, such"\
+    "lines should be removed:"
+    echo
     cat $LINKED_ISSUES_MENTIONED
     EXIT_CODE=1
 fi
