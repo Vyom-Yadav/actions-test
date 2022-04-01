@@ -35,7 +35,7 @@ jobs:
             echo $LINKED_ISSUES | sed -e 's/,/\n/g' >> $LINKED_ISSUES_FORMATTED
             sed -i "s/^/$CHECKSTYLE_ISSUE_URL/" $LINKED_ISSUES_FORMATTED
           fi
-          echo "::set-output name=linked-issues-formatted::$(LINKED_ISSUES_FORMATTED)"
+          echo "::set-output name=linked-issues-formatted::$LINKED_ISSUES_FORMATTED"
       - name: Check Issues
         env:
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
