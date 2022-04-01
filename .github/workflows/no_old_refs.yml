@@ -27,6 +27,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Format linked issues
         id: format_linked_issues
+        if: github.event_name == 'pull_request'
         run: |
           LINKED_ISSUES=${{ steps.links.outputs.issues }}
           LINKED_ISSUES_FORMATTED=/tmp/linked_issues
