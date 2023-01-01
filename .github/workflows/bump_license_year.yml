@@ -14,7 +14,7 @@ permissions:
   pull-requests: write
 jobs:
   bump:
-    if: github.repository == 'checkstyle/checkstyle'
+#    if: github.repository == 'checkstyle/checkstyle'
     name: Bump license year
     runs-on: ubuntu-latest
     steps:
