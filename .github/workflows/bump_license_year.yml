@@ -1,49 +1,34 @@
 #############################################################################
-# Github Action to bump license year
+# GitHub Action to bump license year
 #
 # Workflow starts every new year.
 #
-##############################################################################
+#############################################################################
 name: "Bump license year"
 on:
-  push:
   schedule:
     - cron: "0 0 1 1 *"
-  # So we can manually trigger if required
   workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
 jobs:
   bump:
+    if: github.repository == 'checkstyle/checkstyle'
     name: Bump license year
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the latest code
-        uses: actions/checkout@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Print Current Year
-        id: CURRENT_YEAR
+        uses: actions/checkout@v3
+      - name: Set Current Year
         run: |
-            echo "::set-output name=year::$(date +'%Y')"
-      - name: Modify File
+          echo "YEAR=$(date +'%Y')" >> "$GITHUB_ENV"
+      - name: Modify Files
         run: |
-          ./.ci/bump-license-year.sh $(expr ${{ env.year }} - 1) ${{ env.year }} .
-        env:
-          year: ${{ steps.CURRENT_YEAR.outputs.year }}
-      - name: Echo Year
-        id: echo_year
+          ./.ci/bump-license-year.sh $(("${{ env.YEAR }}" - 1)) ${{ env.YEAR }} .
+      - name: Push commit
         run: |
-            echo $year
-        env:
-          year: ${{ steps.CURRENT_YEAR.outputs.year }}
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v3
-        env:
-          year: ${{ steps.CURRENT_YEAR.outputs.year }}
-        with:
-          commit-message: "minor: Bump year to ${{ env.year }}"
-          committer: GitHub <noreply@github.com>
-          author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
-          branch: bump-year
-          delete-branch: true
-          body: "minor: Bump year to ${{ env.year }}"
-          title: "minor: Bump year to ${{ env.year }}"
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git commit -am "minor: Bump year to ${{ env.YEAR }}"
+          git push
